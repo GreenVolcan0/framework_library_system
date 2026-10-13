@@ -54,14 +54,37 @@ Libris — приложение для учёта выдачи книг в би�
 library_system/
 ├── README.md
 ├── main.py        # консольное меню
-├── books.py       # функции работы с книгами
-├── readers.py     # функции работы с читателями
-├── loans.py       # выдача, возврат, штрафы
-├── storage.py     # загрузка и сохранение JSON
+├── storage.py     # загрузка и сохранение объектов в JSON
 ├── utils.py       # ввод данных, константы
+├── models/
+│   ├── users.py   # класс User
+│   ├── readers.py # класс Reader(User) и функции коллекции читателей
+│   ├── books.py   # класс Book и функции каталога
+│   └── loans.py   # класс Loan и функции выдачи/возврата
 ├── data/          # books.json, readers.json, loans.json
 └── tests/         # тесты pytest
 ```
+
+## Объектная модель (ПР3)
+
+| Класс | Атрибуты | Методы |
+|-------|----------|--------|
+| `User` | `id`, `name`, `email` | `to_dict()`, `__str__()` |
+| `Reader(User)` | + `card_number` | `from_dict()`, `to_dict()`, `__str__()` |
+| `Book` | `id`, `title`, `author`, `year`, `copies` | `matches_title()`, `is_by_author()`, `to_dict()`, `from_dict()`, `__str__()` |
+| `Loan` | `id`, `book`, `reader`, `issue_date`, `due_date`, `return_date` | `is_active`, `is_overdue()`, `calculate_fine()`, `close()`, `to_dict()`, `from_dict()`, `__str__()` |
+
+- **Взаимодействие объектов (композиция):** `Loan` хранит ссылки на объекты
+  `Book` и `Reader`, а не их идентификаторы; в JSON сохраняются только
+  `book_id` и `reader_id`, а при загрузке связи восстанавливаются.
+- **Инкапсуляция:** число экземпляров `Book.copies` и адрес
+  `User.email` проверяются в свойствах (`property`) при каждом изменении.
+- **Наследование:** `Reader` является `User` с читательским билетом.
+- **Полиморфизм:** `print(obj)` вызывает собственный `__str__()` у
+  каждого класса.
+- Функции обработки коллекций (`find_books_by_title()`,
+  `count_available()`, `create_loan()` и др.) остались обычными функциями
+  модулей `models/*.py`.
 
 ## Формат данных
 

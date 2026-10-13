@@ -1,10 +1,11 @@
-"""Libris: консольное приложение учёта выдачи книг (ПР2)."""
+"""Libris: консольное приложение учёта выдачи книг (ПР3, ООП)."""
 from datetime import date
 
-import books as books_mod
-import loans as loans_mod
-import readers as readers_mod
 import storage
+from models import Book, Loan, Reader
+from models import books as books_mod
+from models import loans as loans_mod
+from models import readers as readers_mod
 from utils import input_date, input_int, input_text
 
 MENU = """
@@ -22,33 +23,33 @@ MENU = """
 """
 
 
-def show_books(books: list[dict]) -> None:
+def show_books(books: list[Book]) -> None:
     """Вывести каталог, отсортированный по названию."""
     if not books:
         print("Каталог пуст.")
     for book in books_mod.sort_books(books):
-        print(books_mod.format_book(book))
+        print(book)
 
 
-def search_by_title(books: list[dict]) -> None:
+def search_by_title(books: list[Book]) -> None:
     """Поиск книги по названию."""
     found = books_mod.find_books_by_title(books, input_text("Название: "))
     if not found:
         print("Ничего не найдено.")
     for book in found:
-        print(books_mod.format_book(book))
+        print(book)
 
 
-def search_by_author(books: list[dict]) -> None:
+def search_by_author(books: list[Book]) -> None:
     """Отбор книг по автору."""
     found = books_mod.filter_books_by_author(books, input_text("Автор: "))
     if not found:
         print("Ничего не найдено.")
     for book in found:
-        print(books_mod.format_book(book))
+        print(book)
 
 
-def check_availability(books: list[dict], loans: list[dict]) -> None:
+def check_availability(books: list[Book], loans: list[Loan]) -> None:
     """Проверка наличия свободных экземпляров."""
     book_id = input_int("Номер книги: ")
     try:
@@ -59,8 +60,8 @@ def check_availability(books: list[dict], loans: list[dict]) -> None:
     print(f"Свободных экземпляров: {free}")
 
 
-def issue_book(books: list[dict], readers: list[dict],
-               loans: list[dict]) -> None:
+def issue_book(books: list[Book], readers: list[Reader],
+               loans: list[Loan]) -> None:
     """Оформление выдачи."""
     book_id = input_int("Номер книги: ")
     reader_id = input_int("Номер читателя: ")
@@ -72,10 +73,10 @@ def issue_book(books: list[dict], readers: list[dict],
         print(f"Ошибка: {error}")
         return
     storage.save_loans(loans)
-    print(f"Выдача оформлена, вернуть до {loan['due_date']}")
+    print(f"Выдача оформлена, вернуть до {loan.due_date}")
 
 
-def accept_book(loans: list[dict]) -> None:
+def accept_book(loans: list[Loan]) -> None:
     """Приём книги."""
     loan_id = input_int("Номер выдачи: ")
     returned = input_date("Дата возврата (ГГГГ-ММ-ДД): ")
@@ -88,29 +89,32 @@ def accept_book(loans: list[dict]) -> None:
     print(f"Книга принята. Штраф: {fine:.2f} руб.")
 
 
-def show_loans(books: list[dict], readers: list[dict],
-               loans: list[dict]) -> None:
+def show_loans(loans: list[Loan]) -> None:
     """Вывод всех выдач."""
     if not loans:
         print("Выдач нет.")
     for loan in loans:
-        print(loans_mod.format_loan(loan, books, readers))
+        print(loan)
     overdue = loans_mod.overdue_loans(loans, date.today())
     print(f"Просроченных выдач: {len(overdue)}")
 
 
-def add_book(books: list[dict]) -> None:
+def add_book(books: list[Book]) -> None:
     """Добавление книги в каталог."""
     title = input_text("Название: ")
     author = input_text("Автор: ")
     year = input_int("Год издания: ")
     copies = input_int("Число экземпляров: ")
-    book = books_mod.add_book(books, title, author, year, copies)
+    try:
+        book = books_mod.add_book(books, title, author, year, copies)
+    except ValueError as error:
+        print(f"Ошибка: {error}")
+        return
     storage.save_books(books)
-    print(f"Добавлено: {books_mod.format_book(book)}")
+    print(f"Добавлено: {book}")
 
 
-def add_reader(readers: list[dict]) -> None:
+def add_reader(readers: list[Reader]) -> None:
     """Регистрация читателя."""
     name = input_text("ФИО: ")
     email = input_text("Email: ")
@@ -120,7 +124,7 @@ def add_reader(readers: list[dict]) -> None:
         print(f"Ошибка: {error}")
         return
     storage.save_readers(readers)
-    print(f"Читатель зарегистрирован: {readers_mod.format_reader(reader)}")
+    print(f"Читатель зарегистрирован: {reader}")
 
 
 def main() -> None:
@@ -128,7 +132,7 @@ def main() -> None:
     try:
         books = storage.load_books()
         readers = storage.load_readers()
-        loans = storage.load_loans()
+        loans = storage.load_loans(books, readers)
     except storage.StorageError as error:
         print(f"Ошибка загрузки данных: {error}")
         return
@@ -149,7 +153,7 @@ def main() -> None:
         elif choice == "6":
             accept_book(loans)
         elif choice == "7":
-            show_loans(books, readers, loans)
+            show_loans(loans)
         elif choice == "8":
             add_book(books)
         elif choice == "9":
