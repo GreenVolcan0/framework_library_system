@@ -96,24 +96,33 @@ library_system/
 - `loans.json`: `id`, `book_id`, `reader_id`, `issue_date`,
   `due_date`, `return_date` (`null`, пока книга не возвращена).
 
+## Веб-интерфейс (ПР5)
+
+Консольная версия сохранена; поверх тех же объектов и JSON-файлов
+добавлено Django-приложение (Django 5.2).
+
+| URL | View | Назначение |
+|-----|------|-----------|
+| `/` | `homepage.views.index` | главная страница |
+| `/books/` | `books.views.book_list` | список книг |
+| `/books/<id>/` | `books.views.book_detail` | страница книги, число свободных экземпляров |
+| `/loans/` | `loans.views.loan_list` | список выдач |
+| `/loans/<id>/` | `loans.views.loan_detail` | страница выдачи |
+
+Несуществующие адреса и объекты обрабатываются `handler404`
+(`homepage.views.page_not_found`). Оформление — Bootstrap 5.3 (CDN).
+
+Django-проект `libris`, приложения: `homepage`, `books`, `loans`.
+
 ## Запуск
 
 ```
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-python main.py        # запуск программы
-pytest -v             # тесты
-flake8                # проверка оформления кода
+python main.py             # консольная версия
+python manage.py check     # проверка Django-проекта
+python manage.py runserver # веб-версия: http://127.0.0.1:8000/
+pytest -v                  # тесты
+flake8                     # проверка оформления кода
 ```
-
-## План развития
-
-На следующих этапах планируется:
-
-- разработка веб-приложения;
-- подключение базы данных;
-- реализация пользователей;
-- разработка API;
-- контейнеризация приложения;
-- настройка CI/CD.
