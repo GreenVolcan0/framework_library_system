@@ -73,3 +73,10 @@ def load_loans(books: list[Book], readers: list[Reader],
 def save_loans(loans: list[Loan], path: Path = LOANS_FILE) -> None:
     """Сохранить выдачи."""
     save_json(path, [loan.to_dict() for loan in loans])
+
+
+def load_library() -> tuple[list[Book], list[Reader], list[Loan]]:
+    """Загрузить все данные библиотеки (используется веб-частью)."""
+    books = load_books()
+    readers = load_readers()
+    return books, readers, load_loans(books, readers)
