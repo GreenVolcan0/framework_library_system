@@ -1,0 +1,8 @@
+<nav class="nav libris-nav">
+    <a class="nav-link {% if request.resolver_match.namespace == 'homepage' %}active{% endif %}"
+       href="{% url 'homepage:index' %}">Главная</a>
+    <a class="nav-link {% if request.resolver_match.namespace == 'books' %}active{% endif %}"
+       href="{% url 'books:list' %}">Книги</a>
+    <a class="nav-link {% if request.resolver_match.namespace == 'loans' %}active{% endif %}"
+       href="{% url 'loans:list' %}">Выдачи</a>
+</nav>

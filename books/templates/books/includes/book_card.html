@@ -1,0 +1,13 @@
+<article class="book-card">
+    <h2 class="h5">
+        <a href="{% url 'books:detail' book.id %}">{{ book.title|default:"Без названия" }}</a>
+    </h2>
+    <p class="mb-1">{{ book.author }}, {{ book.year }} г.</p>
+    <p class="mb-0">
+        {% if book.available > 0 %}
+            <span class="badge bg-success">Свободно: {{ book.available }} из {{ book.copies }}</span>
+        {% else %}
+            <span class="badge bg-secondary">Все экземпляры выданы</span>
+        {% endif %}
+    </p>
+</article>

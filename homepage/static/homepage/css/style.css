@@ -1,0 +1,42 @@
+:root {
+    --libris-navy: #1f3a5f;
+    --libris-gold: #d6a02b;
+    --libris-cream: #faf4e6;
+}
+
+body {
+    min-height: 100vh;
+    background-color: var(--libris-cream);
+}
+
+.libris-logo {
+    width: 120px;
+    height: auto;
+    margin: 1rem 0;
+}
+
+.libris-nav .nav-link {
+    color: var(--libris-navy);
+    font-weight: 500;
+}
+
+.libris-nav .nav-link.active {
+    border-bottom: 2px solid var(--libris-gold);
+}
+
+.book-card {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-left: 5px solid var(--libris-gold);
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.loan-status {
+    font-weight: 600;
+}
+
+.loan-status-overdue {
+    background-color: #b02a37 !important;
+}

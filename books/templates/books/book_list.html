@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Книги – Libris{% endblock %}
+
+{% block content %}
+    <h1>Книги</h1>
+
+    <p>Всего книг: {{ books|length }}</p>
+
+    {% for book in books %}
+        {% include "books/includes/book_card.html" %}
+    {% empty %}
+        <p>Книги не найдены.</p>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,7 @@
+{% if loan.status == "returned" %}
+    <span class="badge bg-secondary loan-status loan-status-returned">Возвращена</span>
+{% elif loan.status == "overdue" %}
+    <span class="badge bg-danger loan-status loan-status-overdue">Просрочена</span>
+{% else %}
+    <span class="badge bg-success loan-status loan-status-active">На руках</span>
+{% endif %}

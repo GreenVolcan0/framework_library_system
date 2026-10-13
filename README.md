@@ -96,23 +96,51 @@ library_system/
 - `loans.json`: `id`, `book_id`, `reader_id`, `issue_date`,
   `due_date`, `return_date` (`null`, пока книга не возвращена).
 
-## Веб-интерфейс (ПР5)
+## Веб-интерфейс (ПР5–ПР6)
 
 Консольная версия сохранена; поверх тех же объектов и JSON-файлов
-добавлено Django-приложение (Django 5.2).
+добавлено Django-приложение (Django 5.2). Данные загружаются функцией
+`storage.load_library()`.
 
-| URL | View | Назначение |
-|-----|------|-----------|
-| `/` | `homepage.views.index` | главная страница |
-| `/books/` | `books.views.book_list` | список книг |
-| `/books/<id>/` | `books.views.book_detail` | страница книги, число свободных экземпляров |
-| `/loans/` | `loans.views.loan_list` | список выдач |
-| `/loans/<id>/` | `loans.views.loan_detail` | страница выдачи |
-
-Несуществующие адреса и объекты обрабатываются `handler404`
-(`homepage.views.page_not_found`). Оформление — Bootstrap 5.3 (CDN).
+| URL | Имя маршрута | View | Шаблон |
+|-----|--------------|------|--------|
+| `/` | `homepage:index` | `homepage.views.index` | `homepage/index.html` |
+| `/books/` | `books:list` | `books.views.book_list` | `books/book_list.html` |
+| `/books/<id>/` | `books:detail` | `books.views.book_detail` | `books/book_detail.html` |
+| `/loans/` | `loans:list` | `loans.views.loan_list` | `loans/loan_list.html` |
+| `/loans/<id>/` | `loans:detail` | `loans.views.loan_detail` | `loans/loan_detail.html` |
 
 Django-проект `libris`, приложения: `homepage`, `books`, `loans`.
+Несуществующие адреса и объекты обрабатываются `handler404`
+(`homepage.views.page_not_found`, шаблон `templates/404.html`).
+
+### Шаблоны (ПР6)
+
+HTML формируется только в шаблонах; view-функции готовят контекст и
+вызывают `render()`. Функция `page()` из ПР5 удалена.
+
+```
+templates/
+├── base.html                  # общий каркас: Bootstrap, CSS, логотип, JS
+├── 404.html
+└── includes/navigation.html   # навигация через {% url %}
+homepage/templates/homepage/index.html
+books/templates/books/{book_list,book_detail}.html
+books/templates/books/includes/book_card.html
+loans/templates/loans/{loan_list,loan_detail}.html
+loans/templates/loans/includes/loan_status.html
+```
+
+Использовано: `{% extends %}` и `{% block %}`, `{% include %}`,
+`{% for ... empty %}`, `{% if %}`, именованные URL с пространствами
+имён, фильтры `length`, `default`, `date`, `truncatechars`,
+`floatformat`.
+
+### Статические файлы
+
+`homepage/static/homepage/`: `css/style.css` (собственное оформление
+карточек, статусов и навигации), `js/main.js` (текущий год в подвале),
+`img/logo.png` (логотип).
 
 ## Запуск
 

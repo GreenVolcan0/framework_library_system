@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Выдача № {{ loan.id }} – Libris{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title">Выдача № {{ loan.id }}</h1>
+            <p class="card-text">
+                <strong>Книга:</strong>
+                <a href="{% url 'books:detail' loan.book.id %}">{{ loan.book.title }}</a>
+            </p>
+            <p class="card-text">
+                <strong>Читатель:</strong> {{ loan.reader.name }}
+                ({{ loan.reader.card_number }})
+            </p>
+            <p class="card-text"><strong>Выдана:</strong> {{ loan.issue_date|date:"d.m.Y" }}</p>
+            <p class="card-text"><strong>Вернуть до:</strong> {{ loan.due_date|date:"d.m.Y" }}</p>
+            <p class="card-text">
+                <strong>Возврат:</strong>
+                {{ loan.return_date|date:"d.m.Y"|default:"не возвращена" }}
+            </p>
+            <p class="card-text">
+                <strong>Статус:</strong>
+                {% include "loans/includes/loan_status.html" %}
+            </p>
+            {% if loan.status == "overdue" %}
+                <p class="text-danger">
+                    Просрочено дней: {{ overdue_days }}.
+                    Штраф на сегодня: {{ fine|floatformat:2 }} руб.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{% url 'loans:list' %}" class="btn btn-secondary mt-3">К списку выдач</a>
+{% endblock %}

@@ -32,6 +32,12 @@ class Loan:
         """Просрочена ли невозвращённая выдача."""
         return self.is_active and self.due_date < today
 
+    def get_status(self, today: date) -> str:
+        """Статус выдачи: returned, overdue или active."""
+        if not self.is_active:
+            return "returned"
+        return "overdue" if self.is_overdue(today) else "active"
+
     def calculate_fine(self, returned: date) -> float:
         """Штраф при возврате в указанную дату."""
         if returned <= self.due_date:
