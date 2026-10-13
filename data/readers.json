@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Беляева Анна Павловна",
+    "email": "belyaeva.anytka@gmail.com",
+    "card_number": "LB-0001"
+  },
+  {
+    "id": 2,
+    "name": "Иванов Пётр Сергеевич",
+    "email": "ivanov@example.com",
+    "card_number": "LB-0002"
+  },
+  {
+    "id": 3,
+    "name": "Смирнова Мария Олеговна",
+    "email": "smirnova@example.com",
+    "card_number": "LB-0003"
+  }
+]

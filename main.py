@@ -1,49 +1,165 @@
-"""Libris: начальный сценарий (ПР1) — выдача книги читателю."""
-from datetime import date, timedelta
+"""Libris: консольное приложение учёта выдачи книг (ПР2)."""
+from datetime import date
 
-LOAN_DAYS = 14
-FINE_PER_DAY = 5.0
+import books as books_mod
+import loans as loans_mod
+import readers as readers_mod
+import storage
+from utils import input_date, input_int, input_text
 
-book_title = "Мастер и Маргарита"
-book_author = "М. А. Булгаков"
-copies_total = 3
-copies_on_loan = 3 - 1
-reader_name = "Беляева Анна"
-issue_date = date(2026, 9, 15)
-return_date = date(2026, 10, 3)
-
-
-def get_book_status(total: int, on_loan: int) -> str:
-    """Вернуть статус книги по числу экземпляров."""
-    available = total - on_loan
-    if available > 1:
-        return f"Книга доступна, свободных экземпляров: {available}"
-    if available == 1:
-        return "Остался последний экземпляр"
-    return "Все экземпляры выданы"
-
-
-def calculate_due_date(issued: date, days: int = LOAN_DAYS) -> date:
-    """Рассчитать срок возврата книги."""
-    return issued + timedelta(days=days)
+MENU = """
+=== Libris: учёт выдачи книг ===
+1. Показать книги
+2. Найти книгу по названию
+3. Книги автора
+4. Проверить наличие книги
+5. Выдать книгу
+6. Принять книгу
+7. Показать выдачи
+8. Добавить книгу
+9. Зарегистрировать читателя
+0. Выход
+"""
 
 
-def calculate_fine(due: date, returned: date) -> float:
-    """Рассчитать штраф за просрочку возврата."""
-    if returned <= due:
-        return 0.0
-    return (returned - due).days * FINE_PER_DAY
+def show_books(books: list[dict]) -> None:
+    """Вывести каталог, отсортированный по названию."""
+    if not books:
+        print("Каталог пуст.")
+    for book in books_mod.sort_books(books):
+        print(books_mod.format_book(book))
 
 
-due_date = calculate_due_date(issue_date)
-fine = calculate_fine(due_date, return_date)
+def search_by_title(books: list[dict]) -> None:
+    """Поиск книги по названию."""
+    found = books_mod.find_books_by_title(books, input_text("Название: "))
+    if not found:
+        print("Ничего не найдено.")
+    for book in found:
+        print(books_mod.format_book(book))
 
-print(f"Книга: {book_title} ({book_author})")
-print(get_book_status(copies_total, copies_on_loan))
-print(f"Читатель: {reader_name}")
-print(f"Дата выдачи: {issue_date}")
-print(f"Вернуть до: {due_date}")
-if fine > 0:
-    print(f"Книга возвращена {return_date}, штраф: {fine:.2f} руб.")
-else:
-    print("Книга возвращена вовремя, штрафа нет")
+
+def search_by_author(books: list[dict]) -> None:
+    """Отбор книг по автору."""
+    found = books_mod.filter_books_by_author(books, input_text("Автор: "))
+    if not found:
+        print("Ничего не найдено.")
+    for book in found:
+        print(books_mod.format_book(book))
+
+
+def check_availability(books: list[dict], loans: list[dict]) -> None:
+    """Проверка наличия свободных экземпляров."""
+    book_id = input_int("Номер книги: ")
+    try:
+        free = loans_mod.count_available(books, loans, book_id)
+    except loans_mod.LibraryError as error:
+        print(f"Ошибка: {error}")
+        return
+    print(f"Свободных экземпляров: {free}")
+
+
+def issue_book(books: list[dict], readers: list[dict],
+               loans: list[dict]) -> None:
+    """Оформление выдачи."""
+    book_id = input_int("Номер книги: ")
+    reader_id = input_int("Номер читателя: ")
+    issued = input_date("Дата выдачи (ГГГГ-ММ-ДД): ")
+    try:
+        loan = loans_mod.create_loan(
+            books, readers, loans, book_id, reader_id, issued)
+    except loans_mod.LibraryError as error:
+        print(f"Ошибка: {error}")
+        return
+    storage.save_loans(loans)
+    print(f"Выдача оформлена, вернуть до {loan['due_date']}")
+
+
+def accept_book(loans: list[dict]) -> None:
+    """Приём книги."""
+    loan_id = input_int("Номер выдачи: ")
+    returned = input_date("Дата возврата (ГГГГ-ММ-ДД): ")
+    try:
+        fine = loans_mod.return_book(loans, loan_id, returned)
+    except loans_mod.LibraryError as error:
+        print(f"Ошибка: {error}")
+        return
+    storage.save_loans(loans)
+    print(f"Книга принята. Штраф: {fine:.2f} руб.")
+
+
+def show_loans(books: list[dict], readers: list[dict],
+               loans: list[dict]) -> None:
+    """Вывод всех выдач."""
+    if not loans:
+        print("Выдач нет.")
+    for loan in loans:
+        print(loans_mod.format_loan(loan, books, readers))
+    overdue = loans_mod.overdue_loans(loans, date.today())
+    print(f"Просроченных выдач: {len(overdue)}")
+
+
+def add_book(books: list[dict]) -> None:
+    """Добавление книги в каталог."""
+    title = input_text("Название: ")
+    author = input_text("Автор: ")
+    year = input_int("Год издания: ")
+    copies = input_int("Число экземпляров: ")
+    book = books_mod.add_book(books, title, author, year, copies)
+    storage.save_books(books)
+    print(f"Добавлено: {books_mod.format_book(book)}")
+
+
+def add_reader(readers: list[dict]) -> None:
+    """Регистрация читателя."""
+    name = input_text("ФИО: ")
+    email = input_text("Email: ")
+    try:
+        reader = readers_mod.add_reader(readers, name, email)
+    except ValueError as error:
+        print(f"Ошибка: {error}")
+        return
+    storage.save_readers(readers)
+    print(f"Читатель зарегистрирован: {readers_mod.format_reader(reader)}")
+
+
+def main() -> None:
+    """Главный цикл программы."""
+    try:
+        books = storage.load_books()
+        readers = storage.load_readers()
+        loans = storage.load_loans()
+    except storage.StorageError as error:
+        print(f"Ошибка загрузки данных: {error}")
+        return
+
+    while True:
+        print(MENU)
+        choice = input("Выберите пункт: ").strip()
+        if choice == "1":
+            show_books(books)
+        elif choice == "2":
+            search_by_title(books)
+        elif choice == "3":
+            search_by_author(books)
+        elif choice == "4":
+            check_availability(books, loans)
+        elif choice == "5":
+            issue_book(books, readers, loans)
+        elif choice == "6":
+            accept_book(loans)
+        elif choice == "7":
+            show_loans(books, readers, loans)
+        elif choice == "8":
+            add_book(books)
+        elif choice == "9":
+            add_reader(readers)
+        elif choice == "0":
+            print("До свидания!")
+            break
+        else:
+            print("Неизвестный пункт меню.")
+
+
+if __name__ == "__main__":
+    main()
